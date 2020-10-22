@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="google-signin-client_id" content="772717975118-653hvukiea2bpd0373h967qs1bem5u4c.apps.googleusercontent.com">
+    <meta name="google-signin-scope" content="profile email">
+    <title><%= title %></title>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel='stylesheet' href='/css/style.css' />
+    <link rel='stylesheet' href='/css/materialize.css' />
+    <!-- jquery cdn -->
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/svg4everybody/2.1.9/svg4everybody.min.js" integrity="sha512-7XdqOa4bqU/hqbUuS8epr0ECSj9laLWnualyqow2TQ3RJ+TUoac0yKNjEtgg3gHGEbM+Jbwgo6K/+Y/0mJHOfA==" crossorigin="anonymous"></script>
+    <script src="/js/materialize.js"></script>
+    <!-- <script src="https://apis.google.com/js/platform.js" async defer></script> -->
+    <script>
+        var GoogleAuth;
+        var SCOPE = 'https://www.googleapis.com/auth/drive.metadata.readonly';
+
+        function handleClientLoad() {
+            // Load the API's client and auth2 modules.
+            // Call the initClient function after the modules load.
+            gapi.load('client:auth2', initClient);
+        }
+
+        function initClient() {
+            // In practice, your app can retrieve one or more discovery documents.
+            var discoveryUrl = 'https://www.googleapis.com/discovery/v1/apis/drive/v3/rest';
+
+            // Initialize the gapi.client object, which app uses to make API requests.
+            // Get API key and client ID from API Console.
+            // 'scope' field specifies space-delimited list of access scopes.
+            gapi.client.init({
+                'apiKey': 'AIzaSyDkoflPZfT89rJMUrSNn00ljEaPiZjOiKw',
+                'clientId': '772717975118-653hvukiea2bpd0373h967qs1bem5u4c.apps.googleusercontent.com',
+                'discoveryDocs': [discoveryUrl],
+                'scope': SCOPE
+            }).then(function () {
+                GoogleAuth = gapi.auth2.getAuthInstance();
+
+                // Listen for sign-in state changes.
+                GoogleAuth.isSignedIn.listen(updateSigninStatus);
+
+                // Handle initial sign-in state. (Determine if user is already signed in.)
+                var user = GoogleAuth.currentUser.get();
+                setSigninStatus();
+
+                // Call handleAuthClick function when user clicks on
+                // "Sign In/Authorize" button.
+                $('#sign-in-or-out-button').click(function () {
+                    handleAuthClick();
+                });
+                $('#revoke-access-button').click(function () {
+                    revokeAccess();
+                });
+
+                GoogleAuth.attachClickHandler('sign-in-or-out-button', {}, onSuccess, onFailure);
+            });
+        }
+
+        function handleAuthClick() {
+            if (GoogleAuth.isSignedIn.get()) {
+                // User is authorized and has clicked "Sign out" button.
+                GoogleAuth.signOut();
+            } else {
+                // User is not signed in. Start Google auth flow.
+                GoogleAuth.signIn();
+            }
+        }
+
+        function revokeAccess() {
+            GoogleAuth.disconnect();
+        }
+
+
+        function setSigninStatus() {
+            var user = GoogleAuth.currentUser.get();
+            var isAuthorized = user.hasGrantedScopes(SCOPE);
+
+            if (isAuthorized) {
+                var userName = user.getBasicProfile().getName();
+                var userEmail = user.getBasicProfile().getEmail();
+                $('#sign-in-or-out-button > .buttonText').text('Sign out');
+                $('#revoke-access-button').css('display', 'inline-block');
+                $('#user-profile').css('display', 'block');
+                $('#user-name').text('Name:' + userName);
+                $('#user-email').text('Email:' + userEmail);
+                $('#auth-status').html('You are currently signed in and have granted ' +
+                    'access to this app.');
+
+            } else {
+                $('#sign-in-or-out-button > .buttonText').text('Sign In/Authorize');
+                $('#revoke-access-button').css('display', 'none');
+                $('#user-profile').css('display', 'none');
+                $('#auth-status').html('You have not authorized this app or you are ' +
+                    'signed out.');
+            }
+        }
+
+        var onSuccess = function (user) {
+            console.log('Signed in as ' + user.getBasicProfile().getName());
+        };
+
+        var onFailure = function (error) {
+            console.log(error);
+        };
+
+        function updateSigninStatus() {
+            setSigninStatus();
+        }
+    </script>
+</head>
+
+<body>
+    <main class="body-login">
+        <div class="login-wrap">
+            <header class="login-header">
+                <h1 class="login-logo white-text"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 148 48" width="148" height="48">
+                        <path style="fill: #424242;" d="M19.58 37.65c-9.87 0-18.17-8.04-18.17-17.91 0-9.87 8.3-17.91 18.17-17.91 5.46 0 9.35 2.14 12.27 4.94l-3.45 3.45c-2.1-1.97-4.93-3.49-8.82-3.49-7.21 0-12.84 5.81-12.84 13.02s5.64 13.02 12.84 13.02c4.67 0 7.34-1.88 9.04-3.58 1.4-1.4 2.32-3.41 2.66-6.16h-11.7v-4.89h16.47c.18.87.26 1.92.26 3.06 0 3.67-1.01 8.21-4.24 11.44-3.14 3.26-7.16 5.01-12.49 5.01zm42.2-11.53c0 6.64-5.1 11.53-11.36 11.53s-11.36-4.89-11.36-11.53c0-6.68 5.1-11.53 11.36-11.53s11.36 4.84 11.36 11.53zm-4.98 0c0-4.15-2.96-6.99-6.39-6.99-3.43 0-6.39 2.84-6.39 6.99 0 4.11 2.96 6.99 6.39 6.99 3.43 0 6.39-2.89 6.39-6.99zm30.45 0c0 6.64-5.1 11.53-11.36 11.53s-11.36-4.89-11.36-11.53c0-6.68 5.1-11.53 11.36-11.53s11.36 4.84 11.36 11.53zm-4.97 0c0-4.15-2.96-6.99-6.39-6.99-3.43 0-6.39 2.84-6.39 6.99 0 4.11 2.96 6.99 6.39 6.99 3.43 0 6.39-2.89 6.39-6.99zm29.81-10.83v20.7c0 8.52-5.02 12.01-10.96 12.01-5.59 0-8.95-3.76-10.22-6.81l4.41-1.83c.79 1.88 2.71 4.1 5.81 4.1 3.8 0 6.16-2.36 6.16-6.77v-1.66h-.18c-1.14 1.4-3.32 2.62-6.07 2.62-5.76 0-11.05-5.02-11.05-11.49 0-6.51 5.28-11.57 11.05-11.57 2.75 0 4.93 1.22 6.07 2.58h.18v-1.88h4.8zm-4.45 10.87c0-4.06-2.71-7.03-6.16-7.03-3.49 0-6.42 2.97-6.42 7.03 0 4.02 2.93 6.94 6.42 6.94 3.45.01 6.16-2.92 6.16-6.94zm13.33-23.1v33.89h-5.07V3.06h5.07zm19.92 26.86l3.93 2.62c-1.27 1.88-4.32 5.11-9.61 5.11-6.55 0-11.28-5.07-11.28-11.53 0-6.86 4.77-11.53 10.71-11.53 5.98 0 8.91 4.76 9.87 7.34l.52 1.31-15.42 6.38c1.18 2.31 3.01 3.49 5.59 3.49 2.59 0 4.38-1.27 5.69-3.19zm-12.1-4.15l10.31-4.28c-.57-1.44-2.27-2.45-4.28-2.45-2.58 0-6.16 2.27-6.03 6.73z" />
+                    </svg></h1>
+                <h2 class="little-big-header"><%= title %>!</h2>
+            </header>
+            <div class="flex-grid">
+                <div class="login-half left">
+                    <div class="login-area">
+                        <!-- 登入/登出 -->
+                        <a id="sign-in-or-out-button" class="button social-account-button gsigin-button button-fullwidth">
+                            <svg class="icon" width="26" height="26">
+                                <use xlink:href="/map.svg#g-icon" />
+                            </svg>
+                            <span class="buttonText">Sign In/Authorize</span>
+                        </a>
+
+
+                        <!-- 斷開連結 -->
+                        <a id="revoke-access-button" class="button social-account-button gsigin-button button-fullwidth" style="display: none;">
+                            <svg class="icon" width="26" height="26">
+                                <use xlink:href="/map.svg#g-icon" />
+                            </svg>
+                            <span class="buttonText">Revoke access</span>
+                        </a>
+
+                        <hr>
+                        <div id="auth-status" class="white-text" style="display: inline;"></div>
+
+                        <hr>
+
+                        <ul class="collection" id="user-profile" style="display: none;">
+                            <li id="user-name" class="collection-item"></li>
+                            <li id="user-email" class="collection-item"></li>
+                        </ul>
+                        <form class="login-form top-label-form" id="login-login-form" action="/login" accept-charset="UTF-8" method="post" hidden><input type="hidden" name="authenticity_token" value="ivG9y8N8TbSj1T23Wdw27+P0O9rJNoc1EtNxlrisE9NbGLQUqyCaT+/3ojrtLWeH6uiMN4pDuPsl+8S84sljag==">
+                            <div id="login-email" class="field">
+                                <label for="login-email-field">Username or Email</label>
+                                <input type="text" name="email" id="login-email-field" value="" required="required" style="background-image: url(&quot;data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAASCAYAAABSO15qAAAAAXNSR0IArs4c6QAAAUBJREFUOBGVVE2ORUAQLvIS4gwzEysHkHgnkMiEc4zEJXCMNwtWTmDh3UGcYoaFhZUFCzFVnu4wIaiE+vvq6+6qTgthGH6O4/jA7x1OiCAIPwj7CoLgSXDxSjEVzAt9k01CBKdWfsFf/2WNuEwc2YqigKZpK9glAlVVwTTNbQJZlnlCkiTAZnF/mePB2biRdhwHdF2HJEmgaRrwPA+qqoI4jle5/8XkXzrCFoHg+/5ICdpm13UTho7Q9/0WnsfwiL/ouHwHrJgQR8WEwVG+oXpMPaDAkdzvd7AsC8qyhCiKJjiRnCKwbRsMw9hcQ5zv9maSBeu6hjRNYRgGFuKaCNwjkjzPoSiK1d1gDDecQobOBwswzabD/D3Np7AHOIrvNpHmPI+Kc2RZBm3bcp8wuwSIot7QQ0PznoR6wYSK0Xb/AGVLcWwc7Ng3AAAAAElFTkSuQmCC&quot;); background-repeat: no-repeat; background-attachment: scroll; background-size: 16px 18px; background-position: 98% 50%;" autocomplete="off">
+                            </div>
+                            <div id="login-password" class="field">
+                                <label for="login-password-field">Password</label>
+                                <input name="password" required="required" type="password" id="login-password-field_" style="background-image: url(&quot;data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAASCAYAAABSO15qAAAAAXNSR0IArs4c6QAAAUBJREFUOBGVVE2ORUAQLvIS4gwzEysHkHgnkMiEc4zEJXCMNwtWTmDh3UGcYoaFhZUFCzFVnu4wIaiE+vvq6+6qTgthGH6O4/jA7x1OiCAIPwj7CoLgSXDxSjEVzAt9k01CBKdWfsFf/2WNuEwc2YqigKZpK9glAlVVwTTNbQJZlnlCkiTAZnF/mePB2biRdhwHdF2HJEmgaRrwPA+qqoI4jle5/8XkXzrCFoHg+/5ICdpm13UTho7Q9/0WnsfwiL/ouHwHrJgQR8WEwVG+oXpMPaDAkdzvd7AsC8qyhCiKJjiRnCKwbRsMw9hcQ5zv9maSBeu6hjRNYRgGFuKaCNwjkjzPoSiK1d1gDDecQobOBwswzabD/D3Np7AHOIrvNpHmPI+Kc2RZBm3bcp8wuwSIot7QQ0PznoR6wYSK0Xb/AGVLcWwc7Ng3AAAAAElFTkSuQmCC&quot;); background-repeat: no-repeat; background-attachment: scroll; background-size: 16px 18px; background-position: 98% 50%; cursor: auto;" autocomplete="off">
+                            </div>
+                            <div>
+                                <input type="hidden" id="login-type" name="login-type" value="fullpage">
+                            </div>
+                            <div id="login-error"></div>
+                            <div>
+                                <button id="log-in-button" class="recaptcha-trigger-button button green action-button expand-right">
+                                    <span class="label">Log In</span>
+                                    <span class="spinner"></span>
+                                </button>
+                                &nbsp;&nbsp;
+                                <a href="#" id="forgot-password-link" class="forgot-password-link">
+                                    Forgot Password?
+                                </a>
+                            </div>
+                        </form>
+                        <form class="module login-form top-label-form" id="forgot-password-form" action="#0" hidden>
+                            <h3>Reset Your Password</h3>
+                            <div class="field">
+                                <label for="forgot-email">Username Or Email</label>
+                                <input type="text" id="forgot-email" name="forgot-email" placeholder="your@email.com" required="">
+                            </div>
+                            <div class="field">
+                                <input id="forgot-email-btn" type="submit" value="Send Password Reset Email" class="button button-medium">
+                            </div>
+                            <div id="sent-message">
+                                <div id="sent-message-message"></div>
+                            </div>
+                        </form>
+
+                    </div>
+                </div>
+                <div class="login-divider">
+                    <div class="bar bar-top"></div>
+                    <span class="login-or">OR</span>
+                    <div class="bar bar-bottom"></div>
+                </div>
+                <div class="login-half right">
+                    <div class="module social-auth-errors" id="login-social-auth-errors" hidden></div>
+                    <div class="login-social-buttons">
+                        <a id="login-with-twitter" href="/auth/twitter" data-network="Twitter" class="button social-account-button twitter-button button-fullwidth">
+                            <svg class="icon" width="26" height="26">
+                                <use xlink:href="/map.svg#icon-twitter">
+                                </use>
+                            </svg>
+                            <span>Log In with Twitter</span>
+                        </a>
+                        <a id="login-with-github" href="/auth/github" data-network="Github" class="button github-button social-account-button button-fullwidth">
+                            <svg class="icon" width="26" height="26">
+                                <use xlink:href="/map.svg#icon-githug">
+                                </use>
+                            </svg>
+                            <span>Log In with GitHub</span>
+                        </a>
+                        <a id="login-with-facebook" href="/auth/facebook" data-network="Facebook" class="button social-account-button facebook-button button-fullwidth">
+                            <svg class="icon" width="26" height="26">
+                                <use xlink:href="/map.svg#icon-facebook">
+                                </use>
+                            </svg>
+                            <span>Log In with Facebook</span>
+                        </a>
+                        <a href="/auth/google" id="login-whith-google" class="button social-account-button gsigin-button button-fullwidth">
+                            <svg class="icon" width="26" height="26">
+                                <use xlink:href="/map.svg#g-icon" />
+                            </svg>
+                            <span>Log In with Google</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="signup-callout">
+                Need an account? <a href="/accounts/signup/user/free">Sign up now!</a>
+            </div>
+        </div>
+        <div class="container white">
+            <div class="row">
+                <div class="col s12">
+                    <h2>SVG Test</h2>
+                    <div class="row">
+                        <a class="waves-effect waves-light btn"><svg class="icon" width="148" height="48">
+                                <use xlink:href="/map.svg#icon-google" />
+                            </svg>button</a>
+                        <a class="waves-effect waves-light btn"><i class="material-icons left">cloud</i>button</a>
+                        <a class="waves-effect waves-light btn"><i class="material-icons right">cloud</i>button</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script async defer src="https://apis.google.com/js/api.js" onload="this.onload=function(){};handleClientLoad()" onreadystatechange="if (this.readyState === 'complete') this.onload()">
+    </script>
+
+</body>
+
+</html>
